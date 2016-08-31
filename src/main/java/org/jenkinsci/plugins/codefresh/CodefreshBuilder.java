@@ -104,7 +104,16 @@ public class CodefreshBuilder extends Builder {
     @Override
     public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
-        CFProfile profile = new CFProfile(getDescriptor().getCfUser(), getDescriptor().getCfToken());
+        CFProfile profile = null;
+        try{
+            profile= new CFProfile(getDescriptor().getCfUser(), getDescriptor().getCfToken());
+        }
+        catch (NullPointerException ne)
+        {
+            listener.getLogger().println("Couldn't get Codefresh profile details. Please check your system configuration.");      
+            return false;
+        }
+        
         String serviceId = "";
         String gitPath = "";
         String branch = "";
@@ -122,6 +131,9 @@ public class CodefreshBuilder extends Builder {
                 if (serviceName == null) {
                     SCM scm = build.getProject().getScm();
                     if (!(scm instanceof GitSCM)) {
+                        listener.getLogger().println("Codefresh: you've specified you want to run a Codefresh build,\n but we didn't find"
+                                + " any git repository defined or service name specified for the build.\n"
+                                + "Are you sure that's what you meant?" );      
                         return false;
                     }
 
